@@ -1,0 +1,27 @@
+cluster_name: rancher
+
+nodes:
+  - address: <IP of NODE>
+    user: ubuntu
+    role: [controlplane,worker,etcd]
+    ssh_key_path: path to ssh key
+
+  - address: <IP of NODE>
+    user: ubuntu
+    role: [controlplane,worker,etcd]
+    ssh_key_path: path to ssh key
+
+  - address: <IP of NODE>
+    user: ubuntu
+    role: [controlplane,worker,etcd]
+    ssh_key_path: path to ssh key
+
+services:
+  etcd:
+    backup: false
+    # snapshot: true
+    # creation: 6h
+    # retention: 24h
+
+network:
+  plugin: canal
