@@ -1,0 +1,72 @@
+Host Machine Configurations
+
+1. Install kubectl, rke, helm, docker
+
+curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+kubectl version --client
+
+curl -s https://api.github.com/repos/rancher/rke/releases/latest | grep download_url | grep amd64 | cut -d '"' -f 4 | wget -qi -
+chmod +x rke_linux-amd64
+sudo mv rke_linux-amd64 /usr/local/bin/rke
+rke --version
+
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+
+On every node install docker using below command
+also refer to rancher docs for the port requirement for the nodes
+
+sudo apt-get update && sudo apt-get install docker.io -y
+sudo usermod -aG docker $USER
+
+2. Generate ssh key
+ssh-keygen
+copy to the nodes
+ssh into nodes then install docker into the nodes
+
+Troubleshooting ssh
+sudo nano /etc/ssh/sshd_config
+PermitRootLogin prohibit-password to PermitRootLogin yes 
+PasswordAuthentication no to PasswordAuthentication yes
+
+3. Use rke for creating clusters
+create cluster.yml
+now rke up --config "./cluster.yml"
+
+4. after cluster creation create the certificates before installing rancher on the cluster
+
+kubectl create namespace cert-manager
+custom resource definitions
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.4/cert-manager.crds.yaml
+
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+
+helm install \
+  cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --version v1.0.4
+
+5. install rancher server
+helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
+kubectl create namespace cattle-system
+
+helm install rancher rancher-stable/rancher \
+  --namespace cattle-system \
+  --set hostname=rancher.my.org              
+
+point hostname above to the ip of the jumpserver or hostmachine from where operating the rancher server or use the service to like xip.io for temporary domain name
+
+add the domain name mapped to the loadbalancers url
+
+clean cluster nodes using
+
+docker container stop $(docker container ls -aq)
+docker container rm $(docker container ls -aq)
+docker rmi $(docker images -a -q)
+
+
+
